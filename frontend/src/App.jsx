@@ -4,11 +4,14 @@ import "./App.css";
 function App() {
   const [soil, setSoil] = useState("");
   const [location, setLocation] = useState("");
-  const [result, setResult] = useState(null);
   const [ph, setPh] = useState("");
+  const [nitrogen, setNitrogen] = useState("");
+  const [phosphorus, setPhosphorus] = useState("");
+  const [potassium, setPotassium] = useState("");
+  const [result, setResult] = useState(null);
 
 const getRecommendation = async () => {
-  if (!soil || !location || !ph) return;
+  if (!soil || !location || !ph || !nitrogen || !phosphorus || !potassium) return;
 
   try {
     const response = await fetch("http://127.0.0.1:5001/api/recommend", {
@@ -19,6 +22,9 @@ const getRecommendation = async () => {
       body: JSON.stringify({
         soil_type: soil,
         ph_level: Number(ph),
+        nitrogen: Number(nitrogen),
+        phosphorus: Number(phosphorus),
+        potassium: Number(potassium),
       }),
     });
 
@@ -27,7 +33,8 @@ const getRecommendation = async () => {
     if (data.recommendation) {
       setResult({
         crop: data.recommendation.crop_name,
-        reason: `${data.recommendation.description} Selected soil: ${soil}. Soil pH: ${ph}. Location: ${location}.`,
+        reason: `${data.recommendation.description} Soil: ${soil} | pH: ${ph} | N: ${nitrogen} | P: ${phosphorus} | K: ${potassium}.`,
+        score: data.recommendation.score,
       });
     } else {
       setResult({
@@ -145,6 +152,36 @@ const getRecommendation = async () => {
               />
             </div>
 
+            <div className="form-group">
+              <label>Nitrogen (N)</label>
+              <input
+                type="number"
+                placeholder="e.g. 90"
+                value={nitrogen}
+                onChange={(e) => setNitrogen(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Phosphorus (P)</label>
+              <input
+                type="number"
+                placeholder="e.g. 45"
+                value={phosphorus}
+                onChange={(e) => setPhosphorus(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Potassium (K)</label>
+              <input
+                type="number"
+                placeholder="e.g. 40"
+                value={potassium}
+                onChange={(e) => setPotassium(e.target.value)}
+              />
+            </div>
+
             <button className="recommend-btn" onClick={getRecommendation}>
               Analyze & Recommend
             </button>
@@ -155,6 +192,12 @@ const getRecommendation = async () => {
               <p className="tag">AI RESULT</p>
               <h3>{result.crop}</h3>
               <p>{result.reason}</p>
+
+              {result.score !== undefined && (
+                <p>
+                  <strong>Suitability Score:</strong> {result.score}/100
+                </p>
+              )}
             </div>
           )}
         </section>
