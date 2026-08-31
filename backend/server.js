@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
+const { spawn } = require("child_process");
 
 const app = express();
 
@@ -51,34 +52,120 @@ app.get("/api/soil/:farmId", async (req, res) => {
 
 app.post("/api/recommend", async (req, res) => {
   try {
-    const { soil_type, ph_level } = req.body;
+    const {
+      soil_type,
+      ph_level,
+      nitrogen,
+      phosphorus,
+      potassium,
+    } = req.body;
 
-    const [rows] = await db.query(
-      `SELECT * FROM crops
-       WHERE LOWER(suitable_soil) = LOWER(?)
-       AND ? BETWEEN min_ph AND max_ph`,
-      [soil_type, ph_level]
-    );
+    const [crops] = await db.query("SELECT * FROM crops");
 
-    if (rows.length === 0) {
-      return res.json({
-        success: true,
-        recommendation: null,
-        message: "No suitable crop found for the given conditions."
-      });
-    }
+    const scoredCrops = crops.map((crop) => {
+      let score = 0;
+
+      // Soil compatibility
+      if (
+        crop.suitable_soil &&
+        crop.suitable_soil.toLowerCase() === soil_type.toLowerCase()
+      ) {
+        score += 40;
+      }
+
+      // pH compatibility
+      if (
+        ph_level >= Number(crop.min_ph) &&
+        ph_level <= Number(crop.max_ph)
+      ) {
+        score += 30;
+      }
+
+      // Basic NPK suitability scoring
+      if (Number(nitrogen) >= 40) score += 10;
+      if (Number(phosphorus) >= 20) score += 10;
+      if (Number(potassium) >= 20) score += 10;
+
+      return {
+        ...crop,
+        score,
+      };
+    });
+
+    scoredCrops.sort((a, b) => b.score - a.score);
+
+    const recommendation = scoredCrops[0];
 
     res.json({
       success: true,
-      recommendation: rows[0]
+      recommendation,
+      input: {
+        soil_type,
+        ph_level,
+        nitrogen,
+        phosphorus,
+        potassium,
+      },
     });
-
   } catch (error) {
     console.error(error);
 
     res.status(500).json({
       success: false,
-      error: "Recommendation failed"
+      error: "Recommendation failed",
+    });
+  }
+});
+app.post("/api/ai-recommend", async (req, res) => {
+  try {
+    const { soil_type, ph, nitrogen, phosphorus, potassium } = req.body;
+
+    const python = spawn("python3", ["../ai/predict.py"]);
+
+    let output = "";
+    let errorOutput = "";
+
+    python.stdout.on("data", (data) => {
+      output += data.toString();
+    });
+
+    python.stderr.on("data", (data) => {
+      errorOutput += data.toString();
+    });
+
+    python.on("close", (code) => {
+      if (code !== 0) {
+        console.error(errorOutput);
+
+        return res.status(500).json({
+          success: false,
+          error: "AI prediction failed",
+        });
+      }
+
+      res.json({
+        success: true,
+        prediction: output.trim(),
+      });
+    });
+
+    python.stdin.write(
+      JSON.stringify({
+        soil_type,
+        ph,
+        nitrogen,
+        phosphorus,
+        potassium,
+      })
+    );
+
+    python.stdin.end();
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      error: "AI service failed",
     });
   }
 });
