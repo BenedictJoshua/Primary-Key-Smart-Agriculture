@@ -1,8 +1,8 @@
 # AI Crop Recommendation Module - Primary Key
 
-A high-precision, zero-dependency Crop Recommendation Engine engineered in pure Python to operate flawlessly on advanced runtimes (including Python 3.14+). 
+A crop recommendation engine for the Primary Key Smart Agriculture project, implemented in Python.
 
-The system utilizes a custom-built K-Nearest Neighbors (KNN) algorithm with feature scaling matrices to provide fast, microsecond agricultural insights.
+The system uses a K-Nearest Neighbors (KNN) classifier with feature scaling to provide crop recommendations from soil and weather metrics.
 
 ## Core Metrics
 * Validation Accuracy: 97.95%
