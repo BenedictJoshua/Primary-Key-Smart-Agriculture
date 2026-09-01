@@ -5,23 +5,19 @@ import streamlit as st
 # Dynamically resolves and binds to any internal engine class name variations
 # =====================================================================
 try:
-    import chatbot
-    if hasattr(chatbot, "FreeCloudAgriEngine"):
-        from chatbot import FreeCloudAgriEngine
-    elif hasattr(chatbot, "IntegratedOpenAiAgriEngine"):
-        from chatbot import IntegratedOpenAiAgriEngine as FreeCloudAgriEngine
-    elif hasattr(chatbot, "PrecisionAgriChatbot"):
-        from chatbot import PrecisionAgriChatbot as FreeCloudAgriEngine
-    elif hasattr(chatbot, "GenerativeAgriEngine"):
-        from chatbot import GenerativeAgriEngine as FreeCloudAgriEngine
-    else:
-        # Emergency backup implementation class structure to prevent execution halt
-        class FreeCloudAgriEngine:
-            def query_bot(self, q): return "Local system engine initialized. Please describe your soil or crop parameters."
-except Exception as e:
+    from chatbot import SmartAgriBot
+
     class FreeCloudAgriEngine:
-        def query_bot(self, q): return f"Dependency linkage alert: {e}"
+        def __init__(self):
+            self._bot = SmartAgriBot()
+
+        def query_bot(self, q):
+            return self._bot.get_response(q)
 
+except Exception as e:
+    class FreeCloudAgriEngine:
+        def query_bot(self, q):
+            return f"Dependency linkage alert: {e}"
 # Set Page Configuration with a clean theme state
 st.set_page_config(page_title="Smart Ag Portal", page_icon="🌱", layout="centered")
 
