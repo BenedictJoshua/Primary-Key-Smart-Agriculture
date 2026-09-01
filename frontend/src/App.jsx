@@ -25,7 +25,7 @@ function App() {
     try {
       // Get recommendation from Node.js + MySQL
       const response = await fetch(
-        "http://127.0.0.1:5001/api/recommend",
+        (import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:5001") + "/api/recommend",
         {
           method: "POST",
           headers: {
