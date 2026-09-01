@@ -61,7 +61,9 @@ app.post("/api/recommend", async (req, res) => {
     } = req.body;
 
     const [crops] = await db.query("SELECT * FROM crops");
-
+    if (crops.length === 0) {
+      return res.status(404).json({ success: false, error: "No crops configured" });
+    }
     const scoredCrops = crops.map((crop) => {
       let score = 0;
 
