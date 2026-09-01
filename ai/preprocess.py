@@ -6,12 +6,15 @@ def load_csv_data(data_path="data/Crop_recommendation.csv"):
     Manually parses the agricultural dataset using pure native Python.
     Scans multiple fallback paths to prevent directory routing errors.
     """
+    base_dir = os.path.dirname(__file__)
     possible_paths = [
         data_path,
+        os.path.join(base_dir, "data", "Crop_recommendation.csv"),
+        os.path.join(base_dir, "Crop_recommendation.csv"),
         "data/Crop_recommendation.csv",
         "../data/Crop_recommendation.csv",
         "./data/Crop_recommendation.csv",
-        "Crop_recommendation.csv"
+        "Crop_recommendation.csv",
     ]
     
     resolved_path = None
