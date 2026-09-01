@@ -66,10 +66,8 @@ app.post("/api/recommend", async (req, res) => {
       let score = 0;
 
       // Soil compatibility
-      if (
-        crop.suitable_soil &&
-        crop.suitable_soil.toLowerCase() === soil_type.toLowerCase()
-      ) {
+        crop.suitable_soil.toLowerCase() ===
+          String(soil_type ?? "").toLowerCase()
         score += 40;
       }
 
