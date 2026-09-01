@@ -1,4 +1,5 @@
 const { spawn } = require('child_process');
+const path = require('path');
 
 /**
  * Controller function to predict suitable crops by calling our native Python engine.
@@ -9,10 +10,9 @@ function recommendCrop(metrics) {
         // Extract features matching our Python CLI signature sequential order
         const { n, p, k, temperature, humidity, ph, rainfall } = metrics;
         
-        // Define the path to your system's Python executable
-        const pythonPath = 'C:\\Users\\Biju8\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe';
-        const scriptPath = 'src/predict.py';
-        
+        // Configure Python executable and script path (override with PYTHON_PATH if needed)
+        const pythonPath = process.env.PYTHON_PATH || 'python';
+        const scriptPath = path.join(__dirname, 'predict.py');
         // Spawn the Python process with arguments string-mapped sequentially
         const pythonProcess = spawn(pythonPath, [
             scriptPath, 
