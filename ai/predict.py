@@ -1,102 +1,117 @@
 import sys
-import os
-import math
+import json
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
 
-# Re-use configuration constants from our validated engine parameters
-# Hardcoded from our 97.95% accurate dataset training pass to guarantee microsecond speed
-MEANS = [50.55, 53.36, 48.15, 25.62, 71.48, 6.47, 103.46]
-STDS = [36.91, 32.98, 50.64, 5.06, 22.26, 0.77, 54.92]
 
-# Comprehensive map of our production dataset's historical training points 
-# Pre-packaged to make live execution zero-dependency and rapid
-def load_production_training_set():
-    """
-    Dynamically loads the historical dataset values to enable live KNN distance calculations.
-    """
-    # Look for the dataset path in expected folders
-    data_path = "data/Crop_recommendation.csv"
-    if not os.path.exists(data_path):
-        data_path = "../data/Crop_recommendation.csv"
-    if not os.path.exists(data_path):
-        data_path = "Crop_recommendation.csv"
-        
-    features = []
-    labels = []
-    
-    with open(data_path, 'r') as file:
-        lines = file.readlines()
-        for line in lines[1:]:
-            line = line.strip()
-            if not line:
-                continue
-            row = line.split(',')
-            features.append([float(val) for val in row[:-1]])
-            labels.append(row[-1].strip())
-            
-    return features, labels
+# Training data
+data = pd.DataFrame([
+    {
+        "soil_type": "Loamy",
+        "ph": 6.5,
+        "nitrogen": 90,
+        "phosphorus": 45,
+        "potassium": 40,
+        "crop": "Rice",
+    },
+    {
+        "soil_type": "Loamy",
+        "ph": 6.0,
+        "nitrogen": 80,
+        "phosphorus": 40,
+        "potassium": 35,
+        "crop": "Rice",
+    },
+    {
+        "soil_type": "Sandy",
+        "ph": 6.8,
+        "nitrogen": 60,
+        "phosphorus": 30,
+        "potassium": 50,
+        "crop": "Groundnut",
+    },
+    {
+        "soil_type": "Sandy",
+        "ph": 7.0,
+        "nitrogen": 55,
+        "phosphorus": 35,
+        "potassium": 45,
+        "crop": "Groundnut",
+    },
+    {
+        "soil_type": "Loamy",
+        "ph": 6.2,
+        "nitrogen": 70,
+        "phosphorus": 50,
+        "potassium": 40,
+        "crop": "Maize",
+    },
+    {
+        "soil_type": "Loamy",
+        "ph": 6.7,
+        "nitrogen": 75,
+        "phosphorus": 45,
+        "potassium": 45,
+        "crop": "Maize",
+    },
+])
 
-def scale_single_input(raw_input, means, stds):
-    """
-    Applies our validated Z-score scaling parameters to raw live features.
-    """
-    scaled = []
-    for col in range(len(raw_input)):
-        val = (raw_input[col] - means[col]) / stds[col] if stds[col] != 0 else 0.0
-        scaled.append(val)
-    return scaled
 
-def run_live_inference(input_features):
-    """
-    Executes live mathematical distance calculations against our training cloud.
-    """
-    raw_X, raw_y = load_production_training_set()
-    
-    # Scale both the training cloud and target sample row using matching matrices
-    scaled_train_X = []
-    for row in raw_X:
-        scaled_row = []
-        for col in range(len(row)):
-            val = (row[col] - MEANS[col]) / STDS[col] if STDS[col] != 0 else 0.0
-            scaled_row.append(val)
-        scaled_train_X.append(scaled_row)
-        
-    scaled_target = scale_single_input(input_features, MEANS, STDS)
-    
-    # Compute Euclidean spaces
-    distances = []
-    for i in range(len(scaled_train_X)):
-        dist = 0.0
-        for col in range(len(scaled_target)):
-            dist += (scaled_target[col] - scaled_train_X[i][col]) ** 2
-        distances.append((math.sqrt(dist), raw_y[i]))
-        
-    distances.sort(key=lambda x: x)
-    
-    # Vote configuration (K=5 matching our 97.95% verification model)
-    votes = {}
-    for dist, label in distances[:5]:
-        votes[label] = votes.get(label, 0) + 1
-        
-    return max(votes, key=votes.get)
+soil_mapping = {
+    "Sandy": 0,
+    "Loamy": 1,
+    "Black": 2,
+    "Red": 3,
+    "Alluvial": 4,
+}
+
+
+data["soil_encoded"] = data["soil_type"].map(soil_mapping)
+
+features = [
+    "soil_encoded",
+    "ph",
+    "nitrogen",
+    "phosphorus",
+    "potassium",
+]
+
+X = data[features]
+y = data["crop"]
+
+
+# Train Decision Tree model
+model = DecisionTreeClassifier(random_state=42)
+model.fit(X, y)
+
+
+def predict_crop(input_data):
+    soil_type = input_data.get("soil_type")
+    ph = float(input_data.get("ph", 0))
+    nitrogen = float(input_data.get("nitrogen", 0))
+    phosphorus = float(input_data.get("phosphorus", 0))
+    potassium = float(input_data.get("potassium", 0))
+
+    soil_encoded = soil_mapping.get(soil_type, 1)
+
+    input_df = pd.DataFrame([{
+        "soil_encoded": soil_encoded,
+        "ph": ph,
+        "nitrogen": nitrogen,
+        "phosphorus": phosphorus,
+        "potassium": potassium,
+    }])
+
+    return model.predict(input_df)[0]
+
 
 if __name__ == "__main__":
-    # Check if arguments were supplied by the backend developer
-    # Expected signature: python predict.py N P K temp humidity ph rainfall
-    if len(sys.argv) < 8:
-        print("Error: Missing parameters.")
-        print("Usage: python predict.py <N> <P> <K> <temperature> <humidity> <ph> <rainfall>")
-        sys.argv = [sys.argv[0], "90", "42", "43", "20.87", "82.00", "6.50", "202.93"]
-        print(f"Fallback: Executing test prediction sample metrics -> {sys.argv[1:]}")
-
     try:
-        # Extract live input metrics passed from the command runtime
-        live_inputs = [float(arg) for arg in sys.argv[1:8]]
-        
-        # Calculate optimal crop match
-        recommended_crop = run_live_inference(live_inputs)
-        
-        # Output pure clear result for shell scripting listeners
-        print(f"Prediction Result: {recommended_crop}")
-        
-    except Exception as e:
-        print(f"Error executing prediction engine: {e}")
+        input_data = json.load(sys.stdin)
+
+        prediction = predict_crop(input_data)
+
+        print(prediction)
+
+    except Exception as error:
+        print(f"Error: {error}")
