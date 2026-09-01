@@ -41,8 +41,10 @@ function App() {
         }
       );
 
+      if (!response.ok) {
+        throw new Error(`Recommend request failed: ${response.status}`);
+      }
       const data = await response.json();
-
       if (data.recommendation) {
         const recommendation = data.recommendation;
 
