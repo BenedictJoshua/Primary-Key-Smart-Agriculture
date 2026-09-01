@@ -1,23 +1,35 @@
 import streamlit as st
+import html
 
 # =====================================================================
 # DYNAMIC BOUNDARY ROUTING LAYER
 # Dynamically resolves and binds to any internal engine class name variations
 # =====================================================================
 try:
-    from chatbot import SmartAgriBot
-
-    class FreeCloudAgriEngine:
-        def __init__(self):
-            self._bot = SmartAgriBot()
-
-        def query_bot(self, q):
-            return self._bot.get_response(q)
+    from chatbot import SmartAgriBot
 
-except Exception as e:
-    class FreeCloudAgriEngine:
-        def query_bot(self, q):
-            return f"Dependency linkage alert: {e}"
+
+
+    class FreeCloudAgriEngine:
+        def __init__(self):
+
+            self._bot = SmartAgriBot()
+
+
+
+        def query_bot(self, q):
+
+            return self._bot.get_response(q)
+
+
+except Exception as e:
+
+    class FreeCloudAgriEngine:
+
+        def query_bot(self, q):
+
+            return f"Dependency linkage alert: {e}"
+
 # Set Page Configuration with a clean theme state
 st.set_page_config(page_title="Smart Ag Portal", page_icon="🌱", layout="centered")
 
