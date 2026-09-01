@@ -14,7 +14,6 @@ function App() {
   const getRecommendation = async () => {
     if (
       !soil ||
-      !location ||
       !ph ||
       !nitrogen ||
       !phosphorus ||
