@@ -5,7 +5,7 @@ const { spawn } = require("child_process");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN?.split(",") ?? "http://localhost:5173" }));
 app.use(express.json());
 
 const db = mysql.createPool({
