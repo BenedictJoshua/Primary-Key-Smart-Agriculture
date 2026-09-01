@@ -120,11 +120,18 @@ app.post("/api/ai-recommend", async (req, res) => {
   try {
     const { soil_type, ph, nitrogen, phosphorus, potassium } = req.body;
 
-    const python = spawn("python3", ["../ai/predict.py"]);
+    const python = spawn("python3", [
+      require("path").join(__dirname, "../ai/predict.py"),
+    ]);
+    python.on("error", (err) => {
+      console.error(err);
+      return res
+        .status(500)
+        .json({ success: false, error: "AI process failed to start" });
+    });
 
     let output = "";
     let errorOutput = "";
-
     python.stdout.on("data", (data) => {
       output += data.toString();
     });
