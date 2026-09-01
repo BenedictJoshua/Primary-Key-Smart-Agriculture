@@ -13,16 +13,24 @@ def load_production_training_set():
     """
     Dynamically loads the historical dataset values to enable live KNN distance calculations.
     """
-    # Look for the dataset path in expected folders
-    data_path = "data/Crop_recommendation.csv"
-    if not os.path.exists(data_path):
-        data_path = "../data/Crop_recommendation.csv"
-    if not os.path.exists(data_path):
-        data_path = "Crop_recommendation.csv"
-        
+    # Look for the dataset path in expected folders (relative to this file)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    candidate_paths = [
+        os.path.join(base_dir, "Crop_recommendation.csv"),
+        os.path.join(base_dir, "data", "Crop_recommendation.csv"),
+        os.path.join(base_dir, "..", "data", "Crop_recommendation.csv"),
+    ]
+
+    data_path = next((p for p in candidate_paths if os.path.exists(p)), None)
+    if data_path is None:
+        raise FileNotFoundError(
+            "Could not locate Crop_recommendation.csv. Expected one of: "
+            + ", ".join(candidate_paths)
+        )
+
     features = []
     labels = []
-    
+
     with open(data_path, 'r') as file:
         lines = file.readlines()
         for line in lines[1:]:
