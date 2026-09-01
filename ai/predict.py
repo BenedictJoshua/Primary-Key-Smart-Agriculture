@@ -13,16 +13,23 @@ def load_production_training_set():
     """
     Dynamically loads the historical dataset values to enable live KNN distance calculations.
     """
-    # Look for the dataset path in expected folders
-    data_path = "data/Crop_recommendation.csv"
-    if not os.path.exists(data_path):
-        data_path = "../data/Crop_recommendation.csv"
-    if not os.path.exists(data_path):
-        data_path = "Crop_recommendation.csv"
-        
+    # Look for the dataset path in expected folders (relative to this file, not CWD)
+    base_dir = os.path.dirname(__file__)
+    possible_paths = [
+        os.path.join(base_dir, "data", "Crop_recommendation.csv"),
+        os.path.join(base_dir, "Crop_recommendation.csv"),
+        os.path.join(base_dir, "..", "data", "Crop_recommendation.csv"),
+        "data/Crop_recommendation.csv",
+        "../data/Crop_recommendation.csv",
+        "Crop_recommendation.csv",
+    ]
+
+    data_path = next((p for p in possible_paths if os.path.exists(p)), None)
+    if data_path is None:
+        raise FileNotFoundError("Could not locate Crop_recommendation.csv. Tried: " + ", ".join(possible_paths))
+
     features = []
     labels = []
-    
     with open(data_path, 'r') as file:
         lines = file.readlines()
         for line in lines[1:]:
@@ -82,9 +89,12 @@ def run_live_inference(input_features):
 if __name__ == "__main__":
     # Check if arguments were supplied by the backend developer
     # Expected signature: python predict.py N P K temp humidity ph rainfall
-    if len(sys.argv) != 8:
-        print("Usage: python predict.py <N> <P> <K> <temperature> <humidity> <ph> <rainfall>", file=sys.stderr)
-        sys.exit(2)
+    if len(sys.argv) != 8:
+
+        print("Usage: python predict.py <N> <P> <K> <temperature> <humidity> <ph> <rainfall>", file=sys.stderr)
+
+        sys.exit(2)
+
 
     try:
         # Extract live input metrics passed from the command runtime
