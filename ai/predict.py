@@ -82,11 +82,9 @@ def run_live_inference(input_features):
 if __name__ == "__main__":
     # Check if arguments were supplied by the backend developer
     # Expected signature: python predict.py N P K temp humidity ph rainfall
-    if len(sys.argv) < 8:
-        print("Error: Missing parameters.")
-        print("Usage: python predict.py <N> <P> <K> <temperature> <humidity> <ph> <rainfall>")
-        sys.argv = [sys.argv[0], "90", "42", "43", "20.87", "82.00", "6.50", "202.93"]
-        print(f"Fallback: Executing test prediction sample metrics -> {sys.argv[1:]}")
+    if len(sys.argv) != 8:
+        print("Usage: python predict.py <N> <P> <K> <temperature> <humidity> <ph> <rainfall>", file=sys.stderr)
+        sys.exit(2)
 
     try:
         # Extract live input metrics passed from the command runtime
