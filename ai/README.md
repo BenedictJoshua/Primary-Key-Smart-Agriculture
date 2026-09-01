@@ -1,13 +1,13 @@
 # AI Crop Recommendation Module - Primary Key
 
-A high-precision, zero-dependency Crop Recommendation Engine engineered in pure Python to operate flawlessly on advanced runtimes (including Python 3.14+). 
+A pure-Python Crop Recommendation Engine intended for offline inference (no NumPy/scikit-learn required for prediction).
 
-The system utilizes a custom-built K-Nearest Neighbors (KNN) algorithm with feature scaling matrices to provide fast, microsecond agricultural insights.
+The system uses a custom K-Nearest Neighbors (KNN) classifier with Z-score feature scaling.
 
 ## Core Metrics
-* Validation Accuracy: 97.95%
-* Dependencies: None (Pure Native Python)
-* Production Core Architecture: K-Nearest Neighbors (K=5)
+* Validation Accuracy: 97.95% (on the included dataset; see preprocess.py)
+* Runtime dependencies (prediction): None (pure Python)
+* Model: K-Nearest Neighbors (K=5)
 
 ## Backend Integration Guide
 
